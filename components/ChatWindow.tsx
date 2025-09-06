@@ -19,7 +19,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ messages, isLoading }) => {
   }, [messages, isLoading]);
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8">
+    <div className="flex-1 overflow-y-auto min-h-0 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         {messages.map((msg, index) => (
           <MessageComponent key={index} message={msg} />

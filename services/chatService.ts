@@ -1,26 +1,22 @@
 
-import { Message, ChatHistory } from '../types';
 
 const WEBHOOK_URL = 'https://a-ay.mdlax.my.id/webhook/n8n_chat_agent';
 
 export const sendMessageToWebhook = async (
   message: string,
-  history: Message[]
+  sessionId: string,
+  model: string
 ): Promise<string> => {
   try {
-    const formattedHistory: ChatHistory[] = history.map(item => ({
-      role: item.role,
-      parts: [{ text: item.content }],
-    }));
-
     const response = await fetch(WEBHOOK_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        message: message,
-        history: formattedHistory,
+        chatInput: message,
+        session_id: sessionId,
+        model: model,
       }),
     });
 
@@ -31,13 +27,17 @@ export const sendMessageToWebhook = async (
 
     const data = await response.json();
 
-    // The webhook appears to return the response in a `text` field.
-    if (typeof data.text !== 'string') {
-        throw new Error('Invalid response format from webhook.');
+    // The webhook returns a response in the format: {"AIResponse": "..."}
+    // We need to safely extract the 'AIResponse' string.
+    if (data && typeof data.AIResponse === 'string') {
+      return data.AIResponse;
+    } else {
+      console.error(
+        'Unexpected response format from webhook:',
+        JSON.stringify(data, null, 2)
+      );
+      throw new Error('Invalid response format from webhook.');
     }
-    
-    return data.text;
-
   } catch (error) {
     console.error('Error sending message to webhook:', error);
     if (error instanceof Error) {

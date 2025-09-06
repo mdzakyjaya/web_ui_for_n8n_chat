@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Message, Session } from './types';
 import { sendMessageToWebhook } from './services/chatService';
 import ChatWindow from './components/ChatWindow';
@@ -37,6 +37,31 @@ const App: React.FC = () => {
   const [activeSessionId, setActiveSessionId] = useLocalStorage<string | null>('active-session-id', null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [selectedModel, setSelectedModel] = useState('Gemini 2.5 Pro');
+  const [isModelSelectorOpen, setIsModelSelectorOpen] = useState(false);
+  const modelSelectorRef = useRef<HTMLDivElement>(null);
+
+  const models = [
+    "💎  Gemini 2.5 Pro",
+    "Gemini 2.5 Flash",
+    "GPT 5",
+    "GPT 5-mini",
+    "DeepSeek V3",
+    "DeepSeek R1"
+  ];
+
+  // Effect for closing dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (modelSelectorRef.current && !modelSelectorRef.current.contains(event.target as Node)) {
+        setIsModelSelectorOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [modelSelectorRef]);
 
   // Create a default session if none exist
   useEffect(() => {
@@ -71,15 +96,26 @@ const App: React.FC = () => {
     setSessions(prev => prev.map(s => s.id === activeSessionId ? {...s, messages: currentMessages} : s));
     setIsLoading(true);
 
-    // If it's the first message, update the session title
+    // If it's the first message, generate a simple title
     if (activeSession.messages.length === 0) {
-        const newTitle = text.length > 30 ? text.substring(0, 27) + '...' : text;
-        setSessions(prev => prev.map(s => s.id === activeSessionId ? {...s, title: newTitle} : s));
+      const generateSimpleTitle = (message: string): string => {
+        const words = message.trim().split(/\s+/);
+        // Use the first 5 words as the title
+        if (words.length > 5) {
+          return words.slice(0, 5).join(' ') + '...';
+        }
+        // If the message is short, use the whole thing
+        return message;
+      };
+      const newTitle = generateSimpleTitle(text);
+      if (newTitle) {
+          setSessions(prev => prev.map(s => s.id === activeSessionId ? { ...s, title: newTitle } : s));
+      }
     }
 
     try {
-      // Pass only the history of the current session
-      const responseText = await sendMessageToWebhook(text, activeSession.messages);
+      // Pass the message, session ID, and selected model to the webhook
+      const responseText = await sendMessageToWebhook(text, activeSession.id, selectedModel);
       const modelMessage: Message = { role: 'model', content: responseText };
       updateSessionMessages(activeSession.id, [...currentMessages, modelMessage]);
     } catch (error) {
@@ -91,7 +127,7 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, activeSession, activeSessionId, setSessions]);
+  }, [isLoading, activeSession, activeSessionId, setSessions, selectedModel]);
   
   const handleSuggestionClick = (suggestion: string) => {
       handleSendMessage(suggestion);
@@ -134,14 +170,35 @@ const App: React.FC = () => {
         onRenameSession={handleRenameSession}
         onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
       />
-      <main className="flex-1 flex flex-col h-full bg-[#131314]">
+      <main className="flex-1 flex flex-col h-full bg-[#131314] overflow-hidden">
         <header className="p-4 h-[70px] flex items-center justify-between flex-shrink-0 text-gray-200">
             <div className="flex items-center">
-                <span className="text-2xl">Gemini</span>
-                <button className="ml-4 flex items-center gap-1 text-sm text-gray-300 bg-gray-700/50 hover:bg-gray-700 transition-colors px-3 py-1.5 rounded-lg">
-                    <span>2.5 Pro</span>
-                    <ChevronDownIcon />
-                </button>
+                <span className="text-2xl">Financial Agent</span>
+                <div ref={modelSelectorRef} className="relative ml-4">
+                    <button 
+                        onClick={() => setIsModelSelectorOpen(!isModelSelectorOpen)} 
+                        className="flex items-center gap-1 text-sm text-gray-300 bg-gray-700/50 hover:bg-gray-700 transition-colors px-3 py-1.5 rounded-lg"
+                    >
+                        <span>{selectedModel}</span>
+                        <ChevronDownIcon />
+                    </button>
+                    {isModelSelectorOpen && (
+                        <div className="absolute top-full mt-2 w-48 bg-[#2d2f34] rounded-lg shadow-xl z-10 py-1">
+                            {models.map(model => (
+                                <button
+                                    key={model}
+                                    onClick={() => {
+                                        setSelectedModel(model);
+                                        setIsModelSelectorOpen(false);
+                                    }}
+                                    className="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-700/50"
+                                >
+                                    {model}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
             {/* User Profile Icon can go here */}
         </header>

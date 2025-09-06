@@ -95,7 +95,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             onClick={() => onSelectSession(session.id)}
             className={`group relative flex items-center p-3 rounded-full cursor-pointer transition-colors ${
               session.id === activeSessionId
-                ? 'bg-gradient-to-r from-purple-600/30 to-blue-600/30 text-white'
+                ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white'
                 : 'hover:bg-gray-700/50'
             }`}
           >
@@ -155,7 +155,6 @@ const MenuIcon = () => (
 
 const EditIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
         <path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L14.732 3.732z" />
     </svg>
 );

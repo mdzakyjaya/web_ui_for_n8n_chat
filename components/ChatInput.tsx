@@ -1,16 +1,9 @@
-
 import React, { useState, useRef, useEffect, KeyboardEvent } from 'react';
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
   isLoading: boolean;
 }
-
-const SendIcon = ({ isLoading }: { isLoading: boolean }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 transition-colors duration-200 ${isLoading ? 'text-gray-500' : 'text-white'}`} viewBox="0 0 20 20" fill="currentColor">
-        <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
-    </svg>
-);
 
 const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
   const [value, setValue] = useState('');
@@ -19,7 +12,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
   useEffect(() => {
     const textarea = textareaRef.current;
     if (textarea) {
-      textarea.style.height = 'auto';
+      textarea.style.height = 'auto'; // Reset height
       const scrollHeight = textarea.scrollHeight;
       textarea.style.height = `${scrollHeight}px`;
     }
@@ -40,27 +33,29 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
     }
   };
 
+  const isDisabled = isLoading || !value.trim();
+
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-4 bg-gray-900/50 backdrop-blur-sm border-t border-gray-700/50">
+    <div className="px-4 sm:px-6 lg:px-8 py-4 bg-transparent flex-shrink-0">
       <form onSubmit={handleSubmit} className="max-w-4xl mx-auto flex items-end space-x-4">
-        <div className="flex-1 bg-gray-800/70 rounded-2xl flex items-end p-1 border border-transparent focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-500/50 transition-all duration-300">
+        <div className="flex-1 bg-[#2d2f34] rounded-full flex items-center py-2 pl-6 pr-2 shadow-lg">
           <textarea
             ref={textareaRef}
             value={value}
             onChange={(e) => setValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Message Gemini..."
+            placeholder="Message Agent"
             rows={1}
-            className="w-full bg-transparent p-3 text-gray-200 placeholder-gray-500 resize-none focus:outline-none max-h-48"
+            className="w-full bg-transparent text-gray-200 placeholder-gray-400 resize-none focus:outline-none max-h-48 text-lg"
             disabled={isLoading}
           />
           <button
             type="submit"
-            disabled={isLoading || !value.trim()}
-            className="p-3 rounded-full bg-gradient-to-br from-purple-600 to-blue-600 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+            disabled={isDisabled}
+            className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-colors bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed"
             aria-label="Send message"
           >
-           <SendIcon isLoading={isLoading || !value.trim()} />
+           <svg className={`w-5 h-5 ${isDisabled ? 'text-gray-500' : 'text-white'}`} viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"></path></svg>
           </button>
         </div>
       </form>
