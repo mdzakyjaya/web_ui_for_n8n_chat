@@ -1,0 +1,5 @@
+{
+  "name": "Gemini-like AI Chat",
+  "description": "A silky, colorful, and intense AI chat interface that connects to a backend webhook for intelligent conversations. The UI is inspired by Google's Gemini, featuring a dark theme, vibrant gradients, and smooth animations for a premium user experience.",
+  "requestFramePermissions": []
+}
